@@ -45,7 +45,24 @@ function encode(long, lat) {
   var longFirst = long.toFixed(6).toString().split('.')[1].slice(0, 3);
   var longLast = long.toFixed(6).toString().split('.')[1].slice(4, 6);
 
+  if(parseInt(longNum) === -0) {
+    longNum = 0;
+  }
+
+  if(parseInt(longNum) < 0) {
+    longNum = Math.abs(parseInt(longNum)) + 180;
+  }
+
   var latNum = lat.toFixed(6).toString().split('.')[0];
+
+  if(parseInt(latNum) < 0) {
+    latNum = Math.abs(parseInt(latNum)) + 90;
+  }
+
+  if(parseInt(latNum) === -0) {
+    latNum = 0;
+  }
+
   var latFirst = lat.toFixed(6).toString().split('.')[1].slice(0, 3);
   var latLast = lat.toFixed(6).toString().split('.')[1].slice(4, 6);
 
