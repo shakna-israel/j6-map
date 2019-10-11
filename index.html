@@ -1,0 +1,154 @@
+<noscript>
+<p>This tool relies extensively on JavaScript.</p>
+<p>Unfortunately, JavaScript appears to be disabled.</p>
+</noscript>
+
+<style>
+#content {
+  text-align: center;
+}
+
+.map {
+  height: 80vh;
+}
+
+input {
+  width: 25vw;
+}
+</style>
+
+<div id="content">
+<label for="longitude">Longitude</label>
+<input id="longitude" type="number" step="0.000001" value=0 />
+<label for="latitude">Latitude</label>
+<input id="latitude" type="number" step="0.000001" value=0 />
+<input type="button" id="convertlonglat" value="Convert Longitude/Latitude" />
+<br />
+
+<label for="js6">JS6</label>
+<input id="js6" type="text" />
+<input type="button" id="convertjs6" value="Convert JS6" />
+</div>
+
+<div id="map" class="map"></div>
+
+<script src="data.js"></script>
+<script>
+function zfill(n, width, z) {
+  z = z || '0';
+  n = n + '';
+  return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+}
+
+function encode(long, lat) {
+  var longNum = long.toFixed(6).toString().split('.')[0];
+  var longFirst = long.toFixed(6).toString().split('.')[1].slice(0, 3);
+  var longLast = long.toFixed(6).toString().split('.')[1].slice(4, 6);
+
+  var latNum = lat.toFixed(6).toString().split('.')[0];
+  var latFirst = lat.toFixed(6).toString().split('.')[1].slice(0, 3);
+  var latLast = lat.toFixed(6).toString().split('.')[1].slice(4, 6);
+
+  var r = [longs[longNum], lats[latNum], decimal1[parseInt(longFirst)], decimal2[parseInt(latFirst)], decimal3[parseInt(longLast)], decimal4[parseInt(latLast)]];
+
+  return r.join('-');
+}
+
+function decode(s) {
+  var arr = s.split('-');
+
+  var longNum = longs.indexOf(arr[0]);
+  var longFirst = zfill(decimal1.indexOf(arr[2]), 3);
+  var longLast = zfill(decimal3.indexOf(arr[4]), 3);
+
+  var latNum = lats.indexOf(arr[1]);
+  var latFirst = zfill(decimal2.indexOf(arr[3]), 3);
+  var latLast = zfill(decimal4.indexOf(arr[5]), 3);
+
+  var longitude = '' + longNum + '.' + longFirst + '' + longLast;
+  var latitude = '' + latNum + '.' + latFirst + '' + latLast;
+
+  return {"longitude": longitude, "latitude": latitude};
+}
+
+function convert_longlat() {
+  var longitude = parseFloat(document.getElementById('longitude').value);
+  var latitude = parseFloat(document.getElementById('latitude').value);
+
+  var s = encode(longitude, latitude);
+  document.getElementById('js6').value = s;
+
+  checkmap();
+}
+
+function convert_js6() {
+  var x = decode(document.getElementById('js6').value);
+
+  document.getElementById('longitude').value = x['longitude'];
+  document.getElementById('latitude').value = x['latitude'];
+
+  checkmap();
+}
+
+document.getElementById('convertlonglat').addEventListener("click", convert_longlat);
+document.getElementById('convertjs6').addEventListener("click", convert_js6);
+
+</script>
+
+<script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v6.0.1/build/ol.js"></script>
+<link rel="stylesheet" href="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v6.0.1/css/ol.css">
+
+<script>
+function checkmap() {
+  var lon = document.getElementById('longitude').value;
+  var lat = document.getElementById('latitude').value;
+  map.dispose()
+  map = new ol.Map({
+  target: 'map',
+    layers: [
+      new ol.layer.Tile({
+      source: new ol.source.OSM()
+    })
+  ],
+  view: new ol.View({
+    center: ol.proj.fromLonLat([lon, lat]),
+    zoom: 10
+  })
+  });
+
+  map.on('pointermove', function(evt) {
+    var coords = ol.proj.toLonLat(evt.coordinate);
+    var lat = coords[1];
+    var lon = coords[0];
+    document.getElementById('longitude').value = lat;
+    document.getElementById('latitude').value = lon;
+    var s = encode(lon, lat);
+    document.getElementById('js6').value = s;
+  });
+}
+</script>
+
+<script>
+var map = new ol.Map({
+  target: 'map',
+    layers: [
+      new ol.layer.Tile({
+      source: new ol.source.OSM()
+    })
+  ],
+  view: new ol.View({
+    center: ol.proj.fromLonLat([0, 0]),
+    zoom: 10
+  })
+});
+
+map.on('pointermove', function(evt) {
+  var coords = ol.proj.toLonLat(evt.coordinate);
+  var lat = coords[1];
+  var lon = coords[0];
+  document.getElementById('longitude').value = lat;
+  document.getElementById('latitude').value = lon;
+  var s = encode(lon, lat);
+  document.getElementById('js6').value = s;
+});
+</script>
